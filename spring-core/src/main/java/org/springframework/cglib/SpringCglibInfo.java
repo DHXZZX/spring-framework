@@ -25,6 +25,8 @@ package org.springframework.cglib;
  *
  * @author Chris Beams
  * @since 3.2
+ *
+ * test
  */
 public final class SpringCglibInfo {
 
