@@ -93,14 +93,14 @@ class CglibAopProxy implements AopProxy, Serializable {
 	private static final int INVOKE_HASHCODE = 6;
 
 
-	/** Logger available to subclasses; static to optimize serialization */
+	/** Logger available to subclasses; static to optimize serialization. */
 	protected static final Log logger = LogFactory.getLog(CglibAopProxy.class);
 
-	/** Keeps track of the Classes that we have validated for final methods */
+	/** Keeps track of the Classes that we have validated for final methods. */
 	private static final Map<Class<?>, Boolean> validatedClasses = new WeakHashMap<>();
 
 
-	/** The configuration used to configure this proxy */
+	/** The configuration used to configure this proxy. */
 	protected final AdvisedSupport advised;
 
 	@Nullable
@@ -109,7 +109,7 @@ class CglibAopProxy implements AopProxy, Serializable {
 	@Nullable
 	protected Class<?>[] constructorArgTypes;
 
-	/** Dispatcher used for methods on Advised */
+	/** Dispatcher used for methods on Advised. */
 	private final transient AdvisedDispatcher advisedDispatcher;
 
 	private transient Map<String, Integer> fixedInterceptorMap = Collections.emptyMap();
@@ -259,16 +259,16 @@ class CglibAopProxy implements AopProxy, Serializable {
 				if (!Modifier.isStatic(mod) && !Modifier.isPrivate(mod)) {
 					if (Modifier.isFinal(mod)) {
 						if (implementsInterface(method, ifcs)) {
-							logger.warn("Unable to proxy interface-implementing method [" + method + "] because " +
+							logger.info("Unable to proxy interface-implementing method [" + method + "] because " +
 									"it is marked as final: Consider using interface-based JDK proxies instead!");
 						}
-						logger.info("Final method [" + method + "] cannot get proxied via CGLIB: " +
+						logger.debug("Final method [" + method + "] cannot get proxied via CGLIB: " +
 								"Calls to this method will NOT be routed to the target instance and " +
 								"might lead to NPEs against uninitialized fields in the proxy instance.");
 					}
 					else if (!Modifier.isPublic(mod) && !Modifier.isProtected(mod) &&
 							proxyClassLoader != null && proxySuperClass.getClassLoader() != proxyClassLoader) {
-						logger.info("Method [" + method + "] is package-visible across different ClassLoaders " +
+						logger.debug("Method [" + method + "] is package-visible across different ClassLoaders " +
 								"and cannot get proxied via CGLIB: Declare this method as public or protected " +
 								"if you need to support invocations through the proxy.");
 					}
@@ -291,20 +291,20 @@ class CglibAopProxy implements AopProxy, Serializable {
 		// unadvised but can return this). May be required to expose the proxy.
 		Callback targetInterceptor;
 		if (exposeProxy) {
-			targetInterceptor = isStatic ?
+			targetInterceptor = (isStatic ?
 					new StaticUnadvisedExposedInterceptor(this.advised.getTargetSource().getTarget()) :
-					new DynamicUnadvisedExposedInterceptor(this.advised.getTargetSource());
+					new DynamicUnadvisedExposedInterceptor(this.advised.getTargetSource()));
 		}
 		else {
-			targetInterceptor = isStatic ?
+			targetInterceptor = (isStatic ?
 					new StaticUnadvisedInterceptor(this.advised.getTargetSource().getTarget()) :
-					new DynamicUnadvisedInterceptor(this.advised.getTargetSource());
+					new DynamicUnadvisedInterceptor(this.advised.getTargetSource()));
 		}
 
 		// Choose a "direct to target" dispatcher (used for
 		// unadvised calls to static targets that cannot return this).
-		Callback targetDispatcher = isStatic ?
-				new StaticDispatcher(this.advised.getTargetSource().getTarget()) : new SerializableNoOp();
+		Callback targetDispatcher = (isStatic ?
+				new StaticDispatcher(this.advised.getTargetSource().getTarget()) : new SerializableNoOp());
 
 		Callback[] mainCallbacks = new Callback[] {
 				aopInterceptor,  // for normal advice
